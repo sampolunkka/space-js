@@ -8,7 +8,7 @@ export const BulletSource = Object.freeze({
 });
 
 export class Bullet {
-  constructor(x, y, damage= 1, source = BulletSource.PLAYER, speed = BULLET_SPEED) {
+  constructor(x, y, damage = 1, source = BulletSource.PLAYER, speed = BULLET_SPEED) {
     this.x = x;
     this.y = y;
     this.damage = damage;
@@ -35,6 +35,8 @@ export class Bullet {
   }
 
   isOutOfBounds(bounds) {
-    return this.x > bounds.width;
+    return this.x > bounds.x + bounds.width ||
+      this.y < bounds.y ||
+      this.y > bounds.y + bounds.height
   }
 }

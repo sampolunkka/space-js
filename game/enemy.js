@@ -10,7 +10,9 @@ export class Enemy {
     this.height = ENEMY_HEIGHT;
     this.speed = ENEMY_SPEED;
     this.health = 1;
+    this.scoreValue = 100;
   }
+
   getCollisionBox() {
     return {
       x: this.x,
@@ -19,14 +21,26 @@ export class Enemy {
       height: this.height
     };
   }
-  update() {
+
+  update(playArea) {
     this.x -= this.speed;
+    // Clamp y so enemy never goes above play area
+    if (this.y < playArea.y) {
+      this.y = playArea.y;
+    }
+    if (this.y > playArea.y + playArea.height - this.height) {
+      this.y = playArea.y + playArea.height - this.height;
+    }
   }
+
   draw(ctx) {
     ctx.fillStyle = '#000';
     ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.width, this.height);
   }
+
   isOutOfBounds(bounds) {
-    return this.x + this.width < 0;
+    return this.x > bounds.x + bounds.width ||
+      this.y < bounds.y ||
+      this.y > bounds.y + bounds.height
   }
 }

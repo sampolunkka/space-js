@@ -71,6 +71,6 @@ export class Player {
       this.y += this.speed;
       this.lastMove.down = now;
     }
-    this.y = Math.max(0, Math.min(bounds.height - 7, this.y));
+    this.y = Math.max(bounds.y, Math.min(bounds.y + bounds.height - 7, this.y));
   }
 }
