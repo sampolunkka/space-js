@@ -1,27 +1,25 @@
-export const BULLET_WIDTH = 2;
-export const BULLET_HEIGHT = 1;
-export const BULLET_SPEED = 0.14;
-
 export const BulletSource = Object.freeze({
   PLAYER: 'player',
   ENEMY: 'enemy'
 });
 
 export class Bullet {
-  constructor(x, y, damage = 1, source = BulletSource.PLAYER, speed = BULLET_SPEED) {
+  constructor(x, y, damage = 1, source = BulletSource.PLAYER, speed = 0.14, width = 2, height = 1) {
     this.x = x;
     this.y = y;
     this.damage = damage;
     this.source = source;
     this.speed = source === BulletSource.PLAYER ? speed : -speed;
+    this.width = width;
+    this.height = height;
   }
 
   getCollisionBox() {
     return {
       x: this.x,
       y: this.y,
-      width: BULLET_WIDTH,
-      height: BULLET_HEIGHT
+      width: this.width,
+      height: this.height
     }
   }
 
@@ -30,8 +28,8 @@ export class Bullet {
   }
 
   draw(ctx) {
-    ctx.fillStyle = '#000'; // white bullet
-    ctx.fillRect(Math.floor(this.x), Math.floor(this.y), BULLET_WIDTH, BULLET_HEIGHT);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.width, this.height);
   }
 
   isOutOfBounds(bounds) {

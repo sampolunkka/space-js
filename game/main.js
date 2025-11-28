@@ -29,6 +29,7 @@ const ctx = canvas.getContext('2d');
 const playerImg = new Image();
 const player = new Player(1, 1);
 const heartImg = new Image();
+const bombImg = new Image();
 
 canvas.width = INTERNAL_WIDTH;
 canvas.height = INTERNAL_HEIGHT;
@@ -39,10 +40,17 @@ let lastEnemySpawnTime = 0;
 const bullets = [];
 const enemies = [];
 
-// 7. Event listeners
 window.addEventListener('resize', resizeCanvas);
 window.addEventListener('DOMContentLoaded', resizeCanvas);
 window.addEventListener('keydown', e => {
+  const now = performance.now();
+  if (e.key === 'Enter') {
+    const bomb = player.useBomb(now);
+    if (bomb) {
+      bullets.push(bomb);
+    }
+    return;
+  }
   const bullet = player.handleKeyDown(e);
   if (bullet) {
     bullets.push(bullet);
@@ -51,9 +59,9 @@ window.addEventListener('keydown', e => {
 window.addEventListener('keyup', e => player.handleKeyUp(e));
 window.addEventListener('keyup', e => player.handleKeyUp(e));
 
-// 8. Resource loading
 playerImg.src = 'img/player.png';
 heartImg.src = 'img/heart.png';
+bombImg.src = 'img/bomb.png'
 
 function drawPlayerHP(ctx, hp) {
   const HEART_SIZE = 5;
@@ -71,6 +79,31 @@ function drawPlayerHP(ctx, hp) {
   }
 }
 
+function drawPlayerBombs(ctx, bombs) {
+  const BOMB_SIZE = 5;
+  const MARGIN_LEFT = 34;
+  const MARGIN_TOP = 1; // Draw below hearts, adjust as needed
+  const GAP = 3;
+    ctx.drawImage(
+      bombImg,
+      MARGIN_LEFT,
+      MARGIN_TOP,
+      BOMB_SIZE,
+      BOMB_SIZE);
+
+    const bombsStr = String(bombs).padStart(2, '0');
+
+    drawNumber(
+      ctx,
+      bombsStr,
+      MARGIN_LEFT + (BOMB_SIZE + GAP),
+      1,
+      1,
+      1,
+      '#000'
+    );
+}
+
 function spawnEnemy() {
   const y = Math.floor(Math.random() * (playArea.height - ENEMY_HEIGHT)) + playArea.y;
   enemies.push(new Enemy(playArea.x + playArea.width - ENEMY_WIDTH, y));
@@ -84,6 +117,9 @@ function drawScene() {
 
   // Draw HP hearts
   drawPlayerHP(ctx, player.hp);
+
+  // Draw bombs
+  drawPlayerBombs(ctx, player.bombs);
 
   // Draw score
   const scoreStr = String(score).padStart(5, '0');
