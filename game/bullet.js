@@ -33,8 +33,22 @@ export class Bullet {
   }
 
   isOutOfBounds(bounds) {
-    return this.x > bounds.x + bounds.width ||
-      this.y < bounds.y ||
-      this.y > bounds.y + bounds.height
+    return this.x > bounds.x + bounds.width || this.x < bounds.x;
+  }
+
+  collideWithBullet(other) {
+    // Bombs are not destroyed by bullet collision
+    if (this.isBomb() || (typeof other.isBomb === 'function' && other.isBomb())) {
+      return { destroyThis: false, destroyOther: false };
+    }
+    // Only regular bullets from different sources destroy each other
+    if (other instanceof Bullet && this.source !== other.source) {
+      return { destroyThis: true, destroyOther: true };
+    }
+    return { destroyThis: false, destroyOther: false };
+  }
+
+  isBomb() {
+    return false;
   }
 }

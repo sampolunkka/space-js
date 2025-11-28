@@ -32,4 +32,12 @@ export class Bomb extends Bullet {
       ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.width, this.height);
     }
   }
+
+  collideWithBullet(other) {
+    return { destroyThis: false, destroyOther: false };
+  }
+
+  isBomb() {
+    return true;
+  }
 }

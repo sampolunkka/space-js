@@ -1,6 +1,12 @@
+import { Bullet, BulletSource } from './bullet.js';
+
 export const ENEMY_WIDTH = 5;
 export const ENEMY_HEIGHT = 5;
 export const ENEMY_SPEED = 0.1;
+
+function randomShotInterval() {
+  return Math.random() * (3000 - 2000) + 2000;
+}
 
 export class Enemy {
   constructor(x, y) {
@@ -11,6 +17,8 @@ export class Enemy {
     this.speed = ENEMY_SPEED;
     this.health = 1;
     this.scoreValue = 100;
+    this.lastShotTime = performance.now();
+    this.nextShotInterval = randomShotInterval() - 1500;
   }
 
   getCollisionBox() {
@@ -22,14 +30,28 @@ export class Enemy {
     };
   }
 
-  update(playArea) {
+  update(playArea, bullets) {
     this.x -= this.speed;
-    // Clamp y so enemy never goes above play area
     if (this.y < playArea.y) {
       this.y = playArea.y;
     }
     if (this.y > playArea.y + playArea.height - this.height) {
       this.y = playArea.y + playArea.height - this.height;
+    }
+
+    // Enemy firing logic
+    const now = performance.now();
+    if (now - this.lastShotTime >= this.nextShotInterval) {
+      bullets.push(
+        new Bullet(
+          this.x - 2,
+          this.y + this.height / 2,
+          1,
+          BulletSource.ENEMY
+        )
+      );
+      this.lastShotTime = now;
+      this.nextShotInterval = randomShotInterval();
     }
   }
 
@@ -41,6 +63,6 @@ export class Enemy {
   isOutOfBounds(bounds) {
     return this.x > bounds.x + bounds.width ||
       this.y < bounds.y ||
-      this.y > bounds.y + bounds.height
+      this.y > bounds.y + bounds.height;
   }
 }
