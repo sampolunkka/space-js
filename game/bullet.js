@@ -1,10 +1,10 @@
-export const BulletSource = Object.freeze({
-  PLAYER: 'player',
-  ENEMY: 'enemy'
-});
+import {isEnemy, isEnemyBullet, isPlayer, isPlayerBullet} from "./utils.js";
+import {GameObject} from "./gameobject.js";
+import {BulletSource, GameObjectType} from "./enum.js";
 
-export class Bullet {
+export class Bullet extends GameObject {
   constructor(x, y, damage = 1, source = BulletSource.PLAYER, speed = 0.14, width = 2, height = 1) {
+    super(x, y, width, height);
     this.x = x;
     this.y = y;
     this.damage = damage;
@@ -12,6 +12,7 @@ export class Bullet {
     this.speed = source === BulletSource.PLAYER ? speed : -speed;
     this.width = width;
     this.height = height;
+    this.type = GameObjectType.BULLET;
   }
 
   getCollisionBox() {
@@ -36,19 +37,24 @@ export class Bullet {
     return this.x > bounds.x + bounds.width || this.x < bounds.x;
   }
 
-  collideWithBullet(other) {
-    // Bombs are not destroyed by bullet collision
-    if (this.isBomb() || (typeof other.isBomb === 'function' && other.isBomb())) {
-      return { destroyThis: false, destroyOther: false };
+  collideWith(other) {
+    console.debug('Bullet collideWith', other);
+    // Self is Player bullet
+    if (this.source === BulletSource.PLAYER) {
+      if (isEnemyBullet(other)) {
+        this.destroyed = true
+      } else if (isEnemy(other)) {
+        this.destroyed = true
+      }
     }
-    // Only regular bullets from different sources destroy each other
-    if (other instanceof Bullet && this.source !== other.source) {
-      return { destroyThis: true, destroyOther: true };
-    }
-    return { destroyThis: false, destroyOther: false };
-  }
 
-  isBomb() {
-    return false;
+    // Self is Enemy bullet
+    else {
+      if (isPlayerBullet(other)) {
+        this.destroyed = true
+      } else if (isPlayer(other)) {
+        this.destroyed = true
+      }
+    }
   }
 }

@@ -1,16 +1,20 @@
-// game/player.js
-import {Bullet, BulletSource} from './bullet.js';
-import { Bomb } from './bomb.js';
+import {Bullet} from './bullet.js';
+import {Bomb} from './bomb.js';
+import {isEnemy, isEnemyBullet} from "./utils.js";
+import {GameObject} from "./gameobject.js";
+import {BulletSource, GameObjectType} from "./enum.js";
 
-export class Player {
+export class Player extends GameObject {
   BULLET_COOLDOWN_MS = 300;
   BOMB_COOLDOWN_MS = 800;
-  constructor(x, y, speed = 1) {
+
+  constructor(x, y, width, height, speed = 1) {
+    super(x, y, width, height);
     this.x = x;
     this.y = y;
     this.speed = speed;
-    this.moving = { up: false, down: false };
-    this.lastMove = { up: 0, down: 0 };
+    this.moving = {up: false, down: false};
+    this.lastMove = {up: 0, down: 0};
     this.moveDelay = 50;
     this.lastBulletTime = 0;
     this.lastBombTime = 0;
@@ -19,6 +23,7 @@ export class Player {
     this.bulletDamage = 1;
     this.hp = 3;
     this.bombs = 99;
+    this.type = GameObjectType.PLAYER;
   }
 
   handleKeyDown(e) {
@@ -75,6 +80,7 @@ export class Player {
     }
     return null;
   }
+
   tick(bounds) {
     const now = performance.now();
     if (this.moving.up && now - this.lastMove.up >= this.moveDelay) {
@@ -86,5 +92,16 @@ export class Player {
       this.lastMove.down = now;
     }
     this.y = Math.max(bounds.y, Math.min(bounds.y + bounds.height - 7, this.y));
+  }
+
+  collideWith(other) {
+    if (isEnemyBullet(other)) {
+      this.health -= other.damage;
+    } else if (isEnemy(other)) {
+      this.health -= 1;
+    }
+    if (this.health <= 0) {
+      this.destroyed = true;
+    }
   }
 }

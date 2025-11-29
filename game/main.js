@@ -1,8 +1,7 @@
 import {Player} from './player.js';
-import {Enemy, ENEMY_WIDTH, ENEMY_HEIGHT} from './enemy.js';
-import {isColliding} from './collision.js';
+import {Enemy} from './enemy.js';
+import {isColliding} from './utils.js';
 import {drawNumber} from './font5x5.js';
-import { Bullet, BulletSource } from './bullet.js';
 
 const NOKIA_GREEN = '#6aa84f';
 const INTERNAL_WIDTH = 84;
@@ -34,15 +33,14 @@ canvas.height = INTERNAL_HEIGHT;
 let player;
 let score;
 let lastEnemySpawnTime;
-const bullets = [];
-const enemies = [];
+const gameObjects = [];
 
 function initGame() {
-  player = new Player(1, 1);
+  gameObjects.length = 0;
+  player = new Player(1, 1, 11, 7);
+  gameObjects.push(player)
   score = 0;
   lastEnemySpawnTime = performance.now();
-  bullets.length = 0;
-  enemies.length = 0;
 }
 
 function startGame() {
@@ -59,13 +57,13 @@ window.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const bomb = player.useBomb(now);
     if (bomb) {
-      bullets.push(bomb);
+      gameObjects.push(bomb);
     }
     return;
   }
   const bullet = player.handleKeyDown(e);
   if (bullet) {
-    bullets.push(bullet);
+    gameObjects.push(bullet);
   }
 });
 window.addEventListener('keyup', e => player.handleKeyUp(e));
@@ -120,8 +118,8 @@ function drawPlayerBombs(ctx, bombs) {
 }
 
 function spawnEnemy() {
-  const y = Math.floor(Math.random() * (playArea.height - ENEMY_HEIGHT)) + playArea.y;
-  enemies.push(new Enemy(playArea.x + playArea.width - ENEMY_WIDTH, y));
+  const y = Math.floor(Math.random() * (playArea.height - 7)) + playArea.y;
+  gameObjects.push(new Enemy(playArea.x + playArea.width - 7, y));
 }
 
 function drawGUI() {
@@ -148,6 +146,52 @@ function drawGUI() {
   );
 }
 
+function updateGameObjects(gameObjects, playArea) {
+  for (const obj of gameObjects) {
+    if (obj.update) {
+      obj.update(playArea, gameObjects);
+    }
+  }
+}
+
+function collideGameObjects(gameObjects) {
+  const len = gameObjects.length;
+
+  for (let i = 0; i < len; i++) {
+    const objA = gameObjects[i];
+
+    for (let j = i + 1; j < len; j++) {
+      const objB = gameObjects[j];
+
+      if (
+        objA.getCollisionBox &&
+        objB.getCollisionBox &&
+        isColliding(objA.getCollisionBox(), objB.getCollisionBox())
+      ) {
+        objA.collideWith(objB);
+        objB.collideWith(objA);
+      }
+    }
+  }
+}
+
+function cleanupGameObjects(gameObjects, playArea) {
+  return gameObjects.filter(obj => {
+    // Remove if explicitly destroyed or out of bounds
+    if (obj.destroyed) return false;
+    if (obj.isOutOfBounds && obj.isOutOfBounds(playArea)) return false;
+    return true;
+  });
+}
+
+function drawGameObjects(ctx, gameObjects) {
+  for (const obj of gameObjects) {
+    if (obj.draw) {
+      obj.draw(ctx);
+    }
+  }
+}
+
 function drawScene() {
   ctx.fillStyle = NOKIA_GREEN;
   ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
@@ -160,90 +204,21 @@ function drawScene() {
     ctx.drawImage(playerImg, Math.floor(player.x), Math.floor(player.y));
   }
 
-  // Update and draw bullets
-  for (let i = bullets.length - 1; i >= 0; i--) {
-    bullets[i].update();
-    bullets[i].draw(ctx);
-    if (bullets[i].isOutOfBounds(playArea)) {
-      bullets.splice(i, 1);
-    }
-  }
+  updateGameObjects(gameObjects, playArea);
+  collideGameObjects(gameObjects);
 
-  // Update and draw enemies
-  for (let i = enemies.length - 1; i >= 0; i--) {
-    enemies[i].update(playArea, bullets);
-    enemies[i].draw(ctx);
-    if (enemies[i].isOutOfBounds(playArea)) {
-      enemies.splice(i, 1);
-    }
-  }
+  // Update gameObjects with cleaned array
+  // Use splice to update the array in-place (preserves reference)
+  const cleaned = cleanupGameObjects(gameObjects, playArea);
+  gameObjects.length = 0;
+  gameObjects.push(...cleaned);
 
-  // --- Collision detection: bullets vs enemies ---
-  for (let b = bullets.length - 1; b >= 0; b--) {
-    const bulletBox = bullets[b].getCollisionBox();
-    for (let e = enemies.length - 1; e >= 0; e--) {
-      const enemyBox = enemies[e].getCollisionBox();
-      if (isColliding(bulletBox, enemyBox)) {
-        score += enemies[e].scoreValue;
-        bullets.splice(b, 1);
-        enemies.splice(e, 1);
-        break;
-      }
-    }
-  }
-
-  // --- Player vs Enemy collision detection ---
-  const playerBox = {
-    x: player.x,
-    y: player.y,
-    width: playerImg.width || 7,
-    height: playerImg.height || 7
-  };
-  for (let i = enemies.length - 1; i >= 0; i--) {
-    const enemyBox = enemies[i].getCollisionBox();
-    if (isColliding(playerBox, enemyBox)) {
-      player.hp = Math.max(0, player.hp - 1);
-      enemies.splice(i, 1);
-      if (player.hp === 0) {
-        resetGame();
-        return; // Stop further drawing this frame
-      }
-    }
-  }
-
-  // --- Player vs Enemy Bullets collision detection ---
-  for (let b = bullets.length - 1; b >= 0; b--) {
-    if (bullets[b].source === BulletSource.ENEMY) {
-      const bulletBox = bullets[b].getCollisionBox();
-      if (isColliding(playerBox, bulletBox)) {
-        player.hp = Math.max(0, player.hp - bullets[b].damage);
-        bullets.splice(b, 1);
-        if (player.hp === 0) {
-          resetGame();
-          return;
-        }
-      }
-    }
-  }
-
-  // --- Bullet vs Bullet collision detection ---
-  for (let i = bullets.length - 1; i >= 0; i--) {
-    const bulletA = bullets[i];
-    if (!bulletA) continue; // Defensive check
-    for (let j = bullets.length - 1; j >= 0; j--) {
-      if (i === j) continue;
-      const bulletB = bullets[j];
-      if (!bulletB) continue; // Defensive check
-      if (isColliding(bulletA.getCollisionBox(), bulletB.getCollisionBox())) {
-        const result = bulletA.collideWithBullet(bulletB);
-        if (result.destroyThis) bullets.splice(i, 1);
-        if (result.destroyOther) bullets.splice(j > i ? j - 1 : j, 1);
-        break; // Exit inner loop after removal
-      }
-    }
-  }
+  drawGameObjects(ctx, gameObjects);
 
   drawGUI();
+  if (player.hp <= 0) {
+    resetGame();
+  }
 }
 
 function getControlsHeight() {
