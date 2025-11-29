@@ -1,6 +1,7 @@
 import {Bullet} from './bullet.js';
 import {Bomb} from './bomb.js';
 import {BulletSource} from './const.js';
+import {loadedImages} from "./main.js";
 
 export function setupPlayerControls(player, gameObjects) {
   const movement = { up: false, down: false };
@@ -9,7 +10,7 @@ export function setupPlayerControls(player, gameObjects) {
 
   // Configurable constants
   const PLAYER_SPEED = 1;
-  const BULLET_COOLDOWN_MS = 300;
+  const BULLET_COOLDOWN_MS = 100;
   const BOMB_COOLDOWN_MS = 800;
   const MOVE_DELAY_MS = 25; // Move delay per direction
 
@@ -57,6 +58,7 @@ export function setupPlayerControls(player, gameObjects) {
 
   function updatePlayerControls(playArea) {
     const now = performance.now();
+    const bulletImg = loadedImages.bullet;
 
     // Movement with delay
     if (movement.up && now - lastMove.up >= MOVE_DELAY_MS) {
@@ -74,7 +76,7 @@ export function setupPlayerControls(player, gameObjects) {
     // Shooting
     if (shootPressed && now - lastBulletTime >= BULLET_COOLDOWN_MS) {
       lastBulletTime = now;
-      const bullet = new Bullet(player.x + 22, player.y + 7, player.bulletDamage, BulletSource.PLAYER);
+      const bullet = new Bullet(player.x + 22, player.y + 7, bulletImg, player.bulletDamage, BulletSource.PLAYER);
       gameObjects.push(bullet);
     }
 

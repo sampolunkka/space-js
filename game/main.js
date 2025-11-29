@@ -4,6 +4,8 @@ import {isColliding} from './utils.js';
 import {setupPlayerControls} from './controller.js';
 import {drawHUD, HUD_HEIGHT} from "./hud.js";
 import {NOKIA_GREEN, INTERNAL_WIDTH, INTERNAL_HEIGHT} from "./const.js";
+import {AssetLoader} from "./assetloader.js";
+
 const ENEMY_SPAWN_INTERVAL_MS = 2000;
 
 const PLAY_AREA_X = 0;
@@ -21,22 +23,23 @@ const playArea = {
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-const playerImg = new Image();
-const heartImg = new Image();
-const bombImg = new Image();
-
 canvas.width = INTERNAL_WIDTH;
 canvas.height = INTERNAL_HEIGHT;
 
-let player;
-let score;
-let lastEnemySpawnTime;
-const gameObjects = [];
-let controller;
+const ASSETS = {
+  player: './img/player.png',
+  enemy: './img/enemy-rocket.png',
+  bullet: './img/bullet.png'
+};
+
+const assetLoader = new AssetLoader(ASSETS);
+export let loadedImages = {};
+
+let player, score, lastEnemySpawnTime, gameObjects, controller;
 
 function initGame() {
-  gameObjects.length = 0;
-  player = new Player(1, 1, playerImg);
+  gameObjects = [];
+  player = new Player(1, 1, loadedImages.player);
   gameObjects.push(player);
   score = 0;
   lastEnemySpawnTime = performance.now();
@@ -45,24 +48,25 @@ function initGame() {
 
 function startGame() {
   resizeCanvas();
-  initGame();
-  animate();
+  assetLoader.loadAll().then(images => {
+    loadedImages = images;
+    initGame();
+    animate();
+  });
 }
 
 window.addEventListener('resize', resizeCanvas);
 window.addEventListener('DOMContentLoaded', startGame);
-
-playerImg.src = 'img/player.png';
-heartImg.src = 'img/heart.png';
-bombImg.src = 'img/bomb.png';
 
 function resetGame() {
   initGame();
 }
 
 function spawnEnemy() {
-  const y = Math.floor(Math.random() * (playArea.height - 7)) + playArea.y;
-  gameObjects.push(new Enemy(playArea.x + playArea.width - 7, y));
+  const y = Math.floor(Math.random() * (PLAY_AREA_HEIGHT - playArea.y)) + playArea.y;
+  const x = playArea.x + playArea.width - 7;
+  console.log(`Spawning enemy at (${x}, ${y})`);
+  gameObjects.push(new Enemy(x, y, loadedImages.enemy));
 }
 
 function updateGameObjects(gameObjects, playArea) {

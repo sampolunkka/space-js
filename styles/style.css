@@ -8,11 +8,12 @@
   --slider-track-bg: #444;
   --slider-track-radius: 4px;
   --nokia-green: #6aa84f;
+  --background-color: #43523D;
 }
 
 body {
   margin: 0;
-  background: #000;
+  background: var(--background-color);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -25,7 +26,6 @@ body {
 #controls-bottom {
   width: 100vw;
   z-index: 20;
-  background: rgba(0,0,0,0.8);
   padding: 12px 0;
   box-sizing: border-box;
   display: flex;
@@ -44,9 +44,9 @@ body {
   color: var(--nokia-green);
   font-size: 1.2em;
   font-family: Arial, sans-serif;
-  background: rgba(106,168,79,0.2);
+  background: rgba(0,0,0,0.4);
   padding: 4px 12px 4px 4px;
-  border-radius: 6px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   gap: 10px;

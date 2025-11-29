@@ -1,12 +1,13 @@
 import {isEnemy, isEnemyBullet, isPlayer, isPlayerBullet} from "./utils.js";
 import {GameObject} from "./gameobject.js";
-import {BulletSource, GameObjectType} from "./const.js";
+import {BulletSource, GameObjectType, PaletteIndex} from "./const.js";
+import {Sprite} from "./sprite.js";
+
+const SPRITE_WIDTH = 2;
 
 export class Bullet extends GameObject {
-  constructor(x, y, damage = 1, source = BulletSource.PLAYER, speed = 0.14, width = 2, height = 1) {
-    super(x, y, 4, 2);
-    this.x = x;
-    this.y = y;
+  constructor(x, y, bulletImg, damage = 1, source = BulletSource.PLAYER, speed = 0.33, paletteIndex = PaletteIndex.LIGHT) {
+    super(x, y, new Sprite(bulletImg, SPRITE_WIDTH), paletteIndex);
     this.damage = damage;
     this.source = source;
     this.speed = source === BulletSource.PLAYER ? speed : -speed;
@@ -18,8 +19,12 @@ export class Bullet extends GameObject {
   }
 
   draw(ctx) {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.width, this.height);
+    if (this.sprite && this.sprite.image.complete) {
+      this.sprite.draw(ctx, Math.floor(this.x), Math.floor(this.y), 0, this.paletteIndex, 2);
+    } else {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.width, this.height);
+    }
   }
 
   isOutOfBounds(bounds) {
@@ -27,22 +32,13 @@ export class Bullet extends GameObject {
   }
 
   collideWith(other) {
-    console.debug('Bullet collideWith', other);
-    // Self is Player bullet
     if (this.source === BulletSource.PLAYER) {
-      if (isEnemyBullet(other)) {
-        this.destroyed = true
-      } else if (isEnemy(other)) {
-        this.destroyed = true
+      if (isEnemyBullet(other) || isEnemy(other)) {
+        this.destroyed = true;
       }
-    }
-
-    // Self is Enemy bullet
-    else {
-      if (isPlayerBullet(other)) {
-        this.destroyed = true
-      } else if (isPlayer(other)) {
-        this.destroyed = true
+    } else {
+      if (isPlayerBullet(other) || isPlayer(other)) {
+        this.destroyed = true;
       }
     }
   }

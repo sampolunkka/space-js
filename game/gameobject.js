@@ -1,12 +1,16 @@
+import {PaletteIndex} from "./const.js";
+
 export class GameObject {
-  constructor(x, y, width, height) {
+  constructor(x, y, sprite, paletteIndex = PaletteIndex.LIGHT) {
     this.x = x;
     this.y = y;
-    this.width = width;
-    this.height = height;
+    this.width = sprite.getWidth();
+    this.height = sprite.getHeight();
     this.damage = 0;
     this.type = 'GENERIC';
     this.destroyed = false;
+    this.sprite = sprite;
+    this.paletteIndex = paletteIndex;
   }
 
   getCollisionBox() {

@@ -11,6 +11,11 @@ export const GameObjectType = Object.freeze({
   BOMB: 'bomb'
 });
 
-export const NOKIA_GREEN = '#6aa84f';
+export const PaletteIndex = Object.freeze({
+  LIGHT: 0,
+  DARK: 1
+});
+
+export const NOKIA_GREEN = '#C7F0D8'; //'#6aa84f';
 export const INTERNAL_WIDTH = 168;
 export const INTERNAL_HEIGHT = 96;

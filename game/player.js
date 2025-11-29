@@ -1,22 +1,20 @@
-import {Bullet} from './bullet.js';
-import {Bomb} from './bomb.js';
 import {isEnemy, isEnemyBullet} from "./utils.js";
 import {GameObject} from "./gameobject.js";
-import {BulletSource, GameObjectType} from "./const.js";
+import {GameObjectType, PaletteIndex} from "./const.js";
+import {Sprite} from './sprite.js';
+
+const PLAYER_SPEED = 1;
+const PLAYER_SPRITE_WIDTH = 10;
 
 export class Player extends GameObject {
-  PLAYER_SPEED = 1;
-  PLAYER_SPRITE_WIDTH = 20;
-  PLAYER_SPRITE_HEIGHT = 14;
-
-  constructor(x, y, sprite) {
-    super(x, y, 20, 14);
-    this.speed = this.PLAYER_SPEED;
+  constructor(x, y, playerImg, paletteIndex = PaletteIndex.LIGHT) {
+    super(x, y, new Sprite(playerImg, PLAYER_SPRITE_WIDTH));
+    this.speed = PLAYER_SPEED;
     this.bulletDamage = 1;
     this.hp = 3;
     this.bombs = 99;
     this.type = GameObjectType.PLAYER;
-    this.sprite = sprite;
+    this.paletteIndex = paletteIndex;
   }
 
   update(playArea, gameObjects) {
@@ -24,11 +22,10 @@ export class Player extends GameObject {
   }
 
   draw(ctx) {
-    // Draw player image if loaded, else fallback to rectangle
-    if (this.sprite && this.sprite.complete) {
-      ctx.drawImage(this.sprite, Math.floor(this.x), Math.floor(this.y));
+    if (this.sprite && this.sprite.image.complete) {
+      this.sprite.draw(ctx, Math.floor(this.x), Math.floor(this.y), 0, this.paletteIndex, 2);
     } else {
-      ctx.fillStyle = '#0f0';
+      ctx.fillStyle = '#ed1';
       ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.width, this.height);
     }
   }
