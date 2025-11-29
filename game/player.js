@@ -2,13 +2,15 @@ import {Bullet} from './bullet.js';
 import {Bomb} from './bomb.js';
 import {isEnemy, isEnemyBullet} from "./utils.js";
 import {GameObject} from "./gameobject.js";
-import {BulletSource, GameObjectType} from "./enum.js";
+import {BulletSource, GameObjectType} from "./const.js";
 
 export class Player extends GameObject {
   PLAYER_SPEED = 1;
+  PLAYER_SPRITE_WIDTH = 20;
+  PLAYER_SPRITE_HEIGHT = 14;
 
-  constructor(x, y, width, height, sprite) {
-    super(x, y, width, height);
+  constructor(x, y, sprite) {
+    super(x, y, 20, 14);
     this.speed = this.PLAYER_SPEED;
     this.bulletDamage = 1;
     this.hp = 3;

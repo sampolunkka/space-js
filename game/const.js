@@ -10,3 +10,7 @@ export const GameObjectType = Object.freeze({
   BULLET: 'bullet',
   BOMB: 'bomb'
 });
+
+export const NOKIA_GREEN = '#6aa84f';
+export const INTERNAL_WIDTH = 168;
+export const INTERNAL_HEIGHT = 96;

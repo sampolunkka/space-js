@@ -1,27 +1,16 @@
 import {isEnemy, isEnemyBullet, isPlayer, isPlayerBullet} from "./utils.js";
 import {GameObject} from "./gameobject.js";
-import {BulletSource, GameObjectType} from "./enum.js";
+import {BulletSource, GameObjectType} from "./const.js";
 
 export class Bullet extends GameObject {
   constructor(x, y, damage = 1, source = BulletSource.PLAYER, speed = 0.14, width = 2, height = 1) {
-    super(x, y, width, height);
+    super(x, y, 4, 2);
     this.x = x;
     this.y = y;
     this.damage = damage;
     this.source = source;
     this.speed = source === BulletSource.PLAYER ? speed : -speed;
-    this.width = width;
-    this.height = height;
     this.type = GameObjectType.BULLET;
-  }
-
-  getCollisionBox() {
-    return {
-      x: this.x,
-      y: this.y,
-      width: this.width,
-      height: this.height
-    }
   }
 
   update() {

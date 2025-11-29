@@ -1,7 +1,7 @@
 import {GameObject} from './gameobject.js';
 import {Bullet} from './bullet.js';
 import {isPlayer, isPlayerBullet} from "./utils.js";
-import {BulletSource, GameObjectType} from "./enum.js";
+import {BulletSource, GameObjectType} from "./const.js";
 
 export class Enemy extends GameObject {
   constructor(x, y) {

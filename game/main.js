@@ -1,18 +1,15 @@
 import {Player} from './player.js';
 import {Enemy} from './enemy.js';
 import {isColliding} from './utils.js';
-import {drawNumber} from './font5x5.js';
 import {setupPlayerControls} from './controller.js';
-
-const NOKIA_GREEN = '#6aa84f';
-const INTERNAL_WIDTH = 84;
-const INTERNAL_HEIGHT = 48;
+import {drawHUD, HUD_HEIGHT} from "./hud.js";
+import {NOKIA_GREEN, INTERNAL_WIDTH, INTERNAL_HEIGHT} from "./const.js";
 const ENEMY_SPAWN_INTERVAL_MS = 2000;
-const UI_HEIGHT = 7;
+
 const PLAY_AREA_X = 0;
-const PLAY_AREA_Y = UI_HEIGHT;
+const PLAY_AREA_Y = HUD_HEIGHT;
 const PLAY_AREA_WIDTH = INTERNAL_WIDTH;
-const PLAY_AREA_HEIGHT = INTERNAL_HEIGHT - UI_HEIGHT;
+const PLAY_AREA_HEIGHT = INTERNAL_HEIGHT - HUD_HEIGHT;
 
 const playArea = {
   x: PLAY_AREA_X,
@@ -39,7 +36,7 @@ let controller;
 
 function initGame() {
   gameObjects.length = 0;
-  player = new Player(1, 1, 11, 7, playerImg); // Pass playerImg
+  player = new Player(1, 1, playerImg);
   gameObjects.push(player);
   score = 0;
   lastEnemySpawnTime = performance.now();
@@ -63,74 +60,9 @@ function resetGame() {
   initGame();
 }
 
-function drawPlayerHP(ctx, hp) {
-  const HEART_SIZE = 5;
-  const MARGIN_LEFT = 1;
-  const MARGIN_TOP = 1;
-  const GAP = 1;
-  for (let i = 0; i < hp; i++) {
-    ctx.drawImage(
-      heartImg,
-      MARGIN_LEFT + i * (HEART_SIZE + GAP),
-      MARGIN_TOP,
-      HEART_SIZE,
-      HEART_SIZE
-    );
-  }
-}
-
-function drawPlayerBombs(ctx, bombs) {
-  const BOMB_SIZE = 5;
-  const MARGIN_LEFT = 34;
-  const MARGIN_TOP = 1; // Draw below hearts, adjust as needed
-  const GAP = 3;
-  ctx.drawImage(
-    bombImg,
-    MARGIN_LEFT,
-    MARGIN_TOP,
-    BOMB_SIZE,
-    BOMB_SIZE);
-
-  const bombsStr = String(bombs).padStart(2, '0');
-
-  drawNumber(
-    ctx,
-    bombsStr,
-    MARGIN_LEFT + (BOMB_SIZE + GAP),
-    1,
-    1,
-    1,
-    '#000'
-  );
-}
-
 function spawnEnemy() {
   const y = Math.floor(Math.random() * (playArea.height - 7)) + playArea.y;
   gameObjects.push(new Enemy(playArea.x + playArea.width - 7, y));
-}
-
-function drawGUI() {
-  // Draw rectangle under UI (below UI bar)
-  ctx.fillStyle = NOKIA_GREEN; // Slightly lighter green for contrast
-  ctx.fillRect(0, 0, INTERNAL_WIDTH, 7);
-
-  // Draw HP hearts
-  drawPlayerHP(ctx, player.hp);
-
-  // Draw bombs
-  drawPlayerBombs(ctx, player.bombs);
-
-  // Draw score
-  const scoreStr = String(score).padStart(5, '0');
-  drawNumber(
-    ctx,
-    scoreStr,
-    56,
-    1,
-    1,
-    1,
-    '#000'
-  );
 }
 
 function updateGameObjects(gameObjects, playArea) {
@@ -204,21 +136,15 @@ function drawScene() {
   drawGameObjects(ctx, gameObjects);
 
   // 5. Draw GUI
-  drawGUI();
+  drawHUD(ctx, player, score);
   if (player.hp <= 0) {
     resetGame();
   }
 }
 
-function getControlsHeight() {
-  const controls = document.getElementById('controls-bottom');
-  return controls ? controls.offsetHeight : 0;
-}
-
 function getMaxScale() {
-  const controlsHeight = getControlsHeight();
   const maxWidth = window.innerWidth * 0.8;
-  const maxHeight = (window.innerHeight - controlsHeight) * 0.8;
+  const maxHeight = window.innerHeight * 0.8;
   const scaleByWidth = Math.floor(maxWidth / INTERNAL_WIDTH);
   const scaleByHeight = Math.floor(maxHeight / INTERNAL_HEIGHT);
   return Math.max(2, Math.min(scaleByWidth, scaleByHeight));

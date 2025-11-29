@@ -1,6 +1,6 @@
 import {Bullet} from './bullet.js';
 import {isEnemy} from "./utils.js";
-import {BulletSource, GameObjectType} from "./enum.js";
+import {BulletSource, GameObjectType} from "./const.js";
 
 export class Bomb extends Bullet {
   static DEFAULT_AMPLITUDE = 6;
