@@ -1,5 +1,6 @@
-// JavaScript
-import { Bullet, BulletSource } from './bullet.js';
+import {Bullet} from './bullet.js';
+import {isEnemy} from "./utils.js";
+import {BulletSource, GameObjectType} from "./enum.js";
 
 export class Bomb extends Bullet {
   static DEFAULT_AMPLITUDE = 6;
@@ -15,8 +16,8 @@ export class Bomb extends Bullet {
     this.sprite.src = 'img/bomb.png';
     this._age = 0;
     this.damage = damage;
+    this.type = GameObjectType.BULLET;
   }
-
 
   update() {
     this.x += this.speed;
@@ -33,11 +34,9 @@ export class Bomb extends Bullet {
     }
   }
 
-  collideWithBullet(other) {
-    return { destroyThis: false, destroyOther: false };
-  }
-
-  isBomb() {
-    return true;
+  collideWith(other) {
+    if (isEnemy(other)) {
+      this.destroyed = true;
+    }
   }
 }
