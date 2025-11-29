@@ -2,6 +2,7 @@ import {Player} from './player.js';
 import {Enemy} from './enemy.js';
 import {isColliding} from './utils.js';
 import {drawNumber} from './font5x5.js';
+import {setupPlayerControls} from './controller.js';
 
 const NOKIA_GREEN = '#6aa84f';
 const INTERNAL_WIDTH = 84;
@@ -34,13 +35,15 @@ let player;
 let score;
 let lastEnemySpawnTime;
 const gameObjects = [];
+let controller;
 
 function initGame() {
   gameObjects.length = 0;
-  player = new Player(1, 1, 11, 7);
-  gameObjects.push(player)
+  player = new Player(1, 1, 11, 7, playerImg); // Pass playerImg
+  gameObjects.push(player);
   score = 0;
   lastEnemySpawnTime = performance.now();
+  controller = setupPlayerControls(player, gameObjects);
 }
 
 function startGame() {
@@ -51,22 +54,6 @@ function startGame() {
 
 window.addEventListener('resize', resizeCanvas);
 window.addEventListener('DOMContentLoaded', startGame);
-
-window.addEventListener('keydown', e => {
-  const now = performance.now();
-  if (e.key === 'Enter') {
-    const bomb = player.useBomb(now);
-    if (bomb) {
-      gameObjects.push(bomb);
-    }
-    return;
-  }
-  const bullet = player.handleKeyDown(e);
-  if (bullet) {
-    gameObjects.push(bullet);
-  }
-});
-window.addEventListener('keyup', e => player.handleKeyUp(e));
 
 playerImg.src = 'img/player.png';
 heartImg.src = 'img/heart.png';
@@ -198,23 +185,25 @@ function drawScene() {
 
   ctx.imageSmoothingEnabled = false;
 
-  player.tick(playArea);
-
-  if (playerImg.complete) {
-    ctx.drawImage(playerImg, Math.floor(player.x), Math.floor(player.y));
+  if (controller && controller.updatePlayerControls) {
+    controller.updatePlayerControls(playArea); // <-- Call controls per frame
   }
 
+  // 1. Update all game objects
   updateGameObjects(gameObjects, playArea);
+
+  // 2. Handle collisions
   collideGameObjects(gameObjects);
 
-  // Update gameObjects with cleaned array
-  // Use splice to update the array in-place (preserves reference)
-  const cleaned = cleanupGameObjects(gameObjects, playArea);
+  // 3. Cleanup destroyed or out-of-bounds objects
+  const cleanedObjects = cleanupGameObjects(gameObjects, playArea);
   gameObjects.length = 0;
-  gameObjects.push(...cleaned);
+  gameObjects.push(...cleanedObjects);
 
+  // 4. Draw all game objects
   drawGameObjects(ctx, gameObjects);
 
+  // 5. Draw GUI
   drawGUI();
   if (player.hp <= 0) {
     resetGame();
@@ -228,12 +217,10 @@ function getControlsHeight() {
 
 function getMaxScale() {
   const controlsHeight = getControlsHeight();
-  // Subtract controls' height from available window height
   const maxWidth = window.innerWidth * 0.8;
   const maxHeight = (window.innerHeight - controlsHeight) * 0.8;
   const scaleByWidth = Math.floor(maxWidth / INTERNAL_WIDTH);
   const scaleByHeight = Math.floor(maxHeight / INTERNAL_HEIGHT);
-  // Use the minimum scale to ensure no overlap
   return Math.max(2, Math.min(scaleByWidth, scaleByHeight));
 }
 
