@@ -3,7 +3,7 @@ import {Enemy} from './enemy.js';
 import {isColliding} from './utils.js';
 import {setupPlayerControls} from './controller.js';
 import {drawHUD, HUD_HEIGHT} from "./hud.js";
-import {NOKIA_GREEN, INTERNAL_WIDTH, INTERNAL_HEIGHT} from "./const.js";
+import {INTERNAL_WIDTH, INTERNAL_HEIGHT, PATH_ASSETS, SCREEN_DARK, SCREEN_LIGHT, ColorPalette} from "./const.js";
 import {AssetLoader} from "./assetloader.js";
 
 const ENEMY_SPAWN_INTERVAL_MS = 2000;
@@ -20,22 +20,32 @@ const playArea = {
   height: PLAY_AREA_HEIGHT
 };
 
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+const container = document.getElementById("game-container");
 
-canvas.width = INTERNAL_WIDTH;
-canvas.height = INTERNAL_HEIGHT;
+const backgroundLayerCanvas = document.getElementById('bg-layer');
+const backgroundLayerCanvasCtx = backgroundLayerCanvas.getContext('2d');
+
+const gameLayerCanvas = document.getElementById('game-layer');
+const gameLayerCanvasCtx = gameLayerCanvas.getContext('2d');
+
+gameLayerCanvas.width = INTERNAL_WIDTH;
+gameLayerCanvas.height = INTERNAL_HEIGHT;
+
+backgroundLayerCanvas.width = INTERNAL_WIDTH;
+backgroundLayerCanvas.height = INTERNAL_HEIGHT;
 
 const ASSETS = {
-  player: './img/player.png',
-  enemy: './img/enemy-rocket.png',
-  bullet: './img/bullet.png'
+  player: PATH_ASSETS + 'player.png',
+  enemy: PATH_ASSETS + 'rocket.png',
+  bullet: PATH_ASSETS + 'bullet.png',
+  bomb: PATH_ASSETS + 'bomb.png'
 };
 
 const assetLoader = new AssetLoader(ASSETS);
 export let loadedImages = {};
 
 let player, score, lastEnemySpawnTime, gameObjects, controller;
+let colorPalette = ColorPalette.DARK;
 
 function initGame() {
   gameObjects = [];
@@ -65,8 +75,14 @@ function resetGame() {
 function spawnEnemy() {
   const y = Math.floor(Math.random() * (PLAY_AREA_HEIGHT - playArea.y)) + playArea.y;
   const x = playArea.x + playArea.width - 7;
-  console.log(`Spawning enemy at (${x}, ${y})`);
   gameObjects.push(new Enemy(x, y, loadedImages.enemy));
+}
+
+function tintLayer(ctx, color) {
+  ctx.globalCompositeOperation = "source-in";
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.globalCompositeOperation = "source-over";
 }
 
 function updateGameObjects(gameObjects, playArea) {
@@ -116,10 +132,11 @@ function drawGameObjects(ctx, gameObjects) {
 }
 
 function drawScene() {
-  ctx.fillStyle = NOKIA_GREEN;
-  ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
+  backgroundLayerCanvasCtx.fillStyle = colorPalette.background;
+  backgroundLayerCanvasCtx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
 
-  ctx.imageSmoothingEnabled = false;
+  gameLayerCanvasCtx.clearRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
+  gameLayerCanvasCtx.imageSmoothingEnabled = false;
 
   if (controller && controller.updatePlayerControls) {
     controller.updatePlayerControls(playArea); // <-- Call controls per frame
@@ -137,10 +154,13 @@ function drawScene() {
   gameObjects.push(...cleanedObjects);
 
   // 4. Draw all game objects
-  drawGameObjects(ctx, gameObjects);
+  drawGameObjects(gameLayerCanvasCtx, gameObjects);
 
   // 5. Draw GUI
-  drawHUD(ctx, player, score);
+  drawHUD(gameLayerCanvasCtx, player, score);
+
+  // 6. Tint layers if needed
+  tintLayer(gameLayerCanvasCtx, colorPalette.foreground);
   if (player.hp <= 0) {
     resetGame();
   }
@@ -156,8 +176,8 @@ function getMaxScale() {
 
 function resizeCanvas() {
   const scale = getMaxScale();
-  canvas.style.width = `${INTERNAL_WIDTH * scale}px`;
-  canvas.style.height = `${INTERNAL_HEIGHT * scale}px`;
+  container.style.width = `${INTERNAL_WIDTH * scale}px`;
+  container.style.height = `${INTERNAL_HEIGHT * scale}px`;
 }
 
 function animate() {

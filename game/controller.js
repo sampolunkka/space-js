@@ -1,5 +1,5 @@
-import {Bullet} from './bullet.js';
-import {Bomb} from './bomb.js';
+import {Bullet} from './projectiles/bullet.js';
+import {Bomb} from './projectiles/bomb.js';
 import {BulletSource} from './const.js';
 import {loadedImages} from "./main.js";
 
@@ -84,7 +84,7 @@ export function setupPlayerControls(player, gameObjects) {
     if (bombPressed && player.bombs > 0 && now - lastBombTime >= BOMB_COOLDOWN_MS) {
       lastBombTime = now;
       player.bombs--;
-      const bomb = new Bomb(player.x + 11, player.y - 2);
+      const bomb = new Bomb(player.x + 11, player.y - 2, loadedImages.bomb);
       gameObjects.push(bomb);
     }
   }

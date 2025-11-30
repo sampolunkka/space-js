@@ -1,16 +1,16 @@
 import {GameObject} from './gameobject.js';
-import {Bullet} from './bullet.js';
+import {Bullet} from './projectiles/bullet.js';
 import {isPlayer, isPlayerBullet} from "./utils.js";
-import {BulletSource, GameObjectType, PaletteIndex} from "./const.js";
+import {BulletSource, GameObjectType} from "./const.js";
 import {Sprite} from "./sprite.js";
 import {loadedImages} from "./main.js";
 
 const SPRITE_WIDTH = 9;
 
 export class Enemy extends GameObject {
-  constructor(x, y, enemyImg, paletteIndex = PaletteIndex.LIGHT) {
+  constructor(x, y, enemyImg) {
     super(x, y, new Sprite(enemyImg, SPRITE_WIDTH));
-    this.speed = 0.1;
+    this.speed = 0.2;
     this.health = 1;
     this.scoreValue = 100;
     this.lastShotTime = performance.now();
@@ -27,20 +27,10 @@ export class Enemy extends GameObject {
     const now = performance.now();
     if (now - this.lastShotTime >= this.nextShotInterval) {
       gameObjects.push(
-        new Bullet(this.x - 2, this.y + this.height / 2, bulletImg, 1, BulletSource.ENEMY)
+        new Bullet(this.x - 2, this.y + this.height / 2, bulletImg, 1, BulletSource.ENEMY, 0.5)
       );
       this.lastShotTime = now;
       this.nextShotInterval = Math.random() * (3000 - 2000) + 2000;
-    }
-  }
-
-  draw(ctx) {
-    if (this.sprite && this.sprite.image.complete) {
-      console.log('Drawing enemy at', this.x, this.y);
-      this.sprite.draw(ctx, Math.floor(this.x), Math.floor(this.y), 0, 0, 2);
-    } else {
-      ctx.fillStyle = '#000';
-      ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.width, this.height);
     }
   }
 

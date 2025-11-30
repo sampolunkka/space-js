@@ -1,7 +1,5 @@
-import {PaletteIndex} from "./const.js";
-
 export class GameObject {
-  constructor(x, y, sprite, paletteIndex = PaletteIndex.LIGHT) {
+  constructor(x, y, sprite) {
     this.x = x;
     this.y = y;
     this.width = sprite.getWidth();
@@ -10,7 +8,6 @@ export class GameObject {
     this.type = 'GENERIC';
     this.destroyed = false;
     this.sprite = sprite;
-    this.paletteIndex = paletteIndex;
   }
 
   getCollisionBox() {
@@ -27,7 +24,12 @@ export class GameObject {
   }
 
   draw(ctx) {
-    // Default: do nothing
+    if (this.sprite && this.sprite.image && this.sprite.image.complete) {
+      this.sprite.draw(ctx, Math.floor(this.x), Math.floor(this.y), 0, this.sprite.scale);
+    } else {
+      ctx.fillStyle = '#ff0000';
+      ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.width, this.height);
+    }
   }
 
   isOutOfBounds(bounds) {

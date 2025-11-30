@@ -7,8 +7,10 @@
   --slider-thumb-bg: #fff;
   --slider-track-bg: #444;
   --slider-track-radius: 4px;
-  --nokia-green: #6aa84f;
-  --background-color: #43523D;
+  --impact-green: #6aa84f;
+  --impact-green-dark: #43523d;
+  --impact-blue: #31354A;
+  --background-color: #1f1f1f;
 }
 
 body {
@@ -41,10 +43,10 @@ body {
 }
 
 .control-label {
-  color: var(--nokia-green);
+  color: var(--impact-green);
   font-size: 1.2em;
   font-family: Arial, sans-serif;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.3);
   padding: 4px 12px 4px 4px;
   border-radius: 12px;
   display: flex;
@@ -55,17 +57,32 @@ body {
 .control-icon-small {
   height: 32px;
   width: 32px;
-  fill: var(--nokia-green);
+  fill: var(--impact-green);
 }
 
 .control-icon-large {
   height: 32px;
   width: 54px;
-  fill: var(--nokia-green);
+  fill: var(--impact-green);
 }
 
-canvas {
-  image-rendering: pixelated;
-  background: var(--nokia-green);
+#game-container {
+  position: relative;
   display: block;
+  border-radius: 16px;
+  border: 8px solid var(--impact-green-dark);
+  overflow: hidden;
+}
+
+#game-container canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  image-rendering: pixelated;
+  display: block;
+
+  /* Each canvas will exactly overlap */
+  width: 100%;
+  height: 100%;
 }

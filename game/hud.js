@@ -1,14 +1,14 @@
 import {drawNumber} from './scorefont.js';
-import {NOKIA_GREEN} from './const.js';
+import {PATH_ASSETS} from './const.js';
 export const HUD_HEIGHT = 14;
 
 const MARGIN_TOP = 1;
 
 const heartImg = new window.Image();
-heartImg.src = 'img/heart.png';
+heartImg.src =  PATH_ASSETS + 'heart.png';
 
 const bombImg = new window.Image();
-bombImg.src = 'img/bomb.png';
+bombImg.src =  PATH_ASSETS + 'bomb.png';
 
 export function drawPlayerHP(ctx, hp, heartImg) {
   const HEART_SIZE = 10;
@@ -57,8 +57,7 @@ function drawScore(ctx, score) {
 }
 
 export function drawHUD(ctx, player, score) {
-  ctx.fillStyle = NOKIA_GREEN;
-  ctx.fillRect(0, 0, ctx.canvas.width, HUD_HEIGHT);
+  ctx.clearRect(0, 0, ctx.canvas.width, HUD_HEIGHT);
 
   drawPlayerHP(ctx, player.hp, heartImg);
   drawPlayerBombs(ctx, player.bombs, bombImg);

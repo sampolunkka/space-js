@@ -1,9 +1,11 @@
+import {PATH_ASSETS} from "./const.js";
+
 const DIGIT_WIDTH = 6;
 const DIGIT_HEIGHT = 10;
 const DIGIT_COUNT = 10;
 
 export const scoreFontImage = new window.Image();
-scoreFontImage.src = './img/score-font.png';
+scoreFontImage.src = PATH_ASSETS + 'score-font.png';
 
 /**
  * Draw a single digit using the sprite sheet.
