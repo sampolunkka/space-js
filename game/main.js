@@ -1,18 +1,17 @@
 import {Player} from './player.js';
 import {Enemy} from './enemy.js';
-import {isColliding} from './utils.js';
-import {drawNumber} from './font5x5.js';
+import {isColliding, isEnemy} from './utils.js';
 import {setupPlayerControls} from './controller.js';
+import {drawHUD, HUD_HEIGHT} from "./hud.js";
+import {INTERNAL_WIDTH, INTERNAL_HEIGHT, PATH_ASSETS, SCREEN_DARK, SCREEN_LIGHT, ColorPalette} from "./const.js";
+import {AssetLoader} from "./assetloader.js";
 
-const NOKIA_GREEN = '#6aa84f';
-const INTERNAL_WIDTH = 84;
-const INTERNAL_HEIGHT = 48;
 const ENEMY_SPAWN_INTERVAL_MS = 2000;
-const UI_HEIGHT = 7;
+
 const PLAY_AREA_X = 0;
-const PLAY_AREA_Y = UI_HEIGHT;
+const PLAY_AREA_Y = HUD_HEIGHT;
 const PLAY_AREA_WIDTH = INTERNAL_WIDTH;
-const PLAY_AREA_HEIGHT = INTERNAL_HEIGHT - UI_HEIGHT;
+const PLAY_AREA_HEIGHT = INTERNAL_HEIGHT - HUD_HEIGHT;
 
 const playArea = {
   x: PLAY_AREA_X,
@@ -21,25 +20,36 @@ const playArea = {
   height: PLAY_AREA_HEIGHT
 };
 
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+const container = document.getElementById("game-container");
 
-const playerImg = new Image();
-const heartImg = new Image();
-const bombImg = new Image();
+const backgroundLayerCanvas = document.getElementById('bg-layer');
+const backgroundLayerCanvasCtx = backgroundLayerCanvas.getContext('2d');
 
-canvas.width = INTERNAL_WIDTH;
-canvas.height = INTERNAL_HEIGHT;
+const gameLayerCanvas = document.getElementById('game-layer');
+const gameLayerCanvasCtx = gameLayerCanvas.getContext('2d');
 
-let player;
-let score;
-let lastEnemySpawnTime;
-const gameObjects = [];
-let controller;
+gameLayerCanvas.width = INTERNAL_WIDTH;
+gameLayerCanvas.height = INTERNAL_HEIGHT;
+
+backgroundLayerCanvas.width = INTERNAL_WIDTH;
+backgroundLayerCanvas.height = INTERNAL_HEIGHT;
+
+const ASSETS = {
+  player: PATH_ASSETS + 'player.png',
+  enemy: PATH_ASSETS + 'rocket.png',
+  bullet: PATH_ASSETS + 'bullet.png',
+  bomb: PATH_ASSETS + 'bomb.png'
+};
+
+const assetLoader = new AssetLoader(ASSETS);
+export let loadedImages = {};
+
+let player, score, lastEnemySpawnTime, gameObjects, controller;
+let colorPalette = ColorPalette.DARK;
 
 function initGame() {
-  gameObjects.length = 0;
-  player = new Player(1, 1, 11, 7, playerImg); // Pass playerImg
+  gameObjects = [];
+  player = new Player(1, 1, loadedImages.player);
   gameObjects.push(player);
   score = 0;
   lastEnemySpawnTime = performance.now();
@@ -48,89 +58,31 @@ function initGame() {
 
 function startGame() {
   resizeCanvas();
-  initGame();
-  animate();
+  assetLoader.loadAll().then(images => {
+    loadedImages = images;
+    initGame();
+    animate();
+  });
 }
 
 window.addEventListener('resize', resizeCanvas);
 window.addEventListener('DOMContentLoaded', startGame);
 
-playerImg.src = 'img/player.png';
-heartImg.src = 'img/heart.png';
-bombImg.src = 'img/bomb.png';
-
 function resetGame() {
   initGame();
 }
 
-function drawPlayerHP(ctx, hp) {
-  const HEART_SIZE = 5;
-  const MARGIN_LEFT = 1;
-  const MARGIN_TOP = 1;
-  const GAP = 1;
-  for (let i = 0; i < hp; i++) {
-    ctx.drawImage(
-      heartImg,
-      MARGIN_LEFT + i * (HEART_SIZE + GAP),
-      MARGIN_TOP,
-      HEART_SIZE,
-      HEART_SIZE
-    );
-  }
-}
-
-function drawPlayerBombs(ctx, bombs) {
-  const BOMB_SIZE = 5;
-  const MARGIN_LEFT = 34;
-  const MARGIN_TOP = 1; // Draw below hearts, adjust as needed
-  const GAP = 3;
-  ctx.drawImage(
-    bombImg,
-    MARGIN_LEFT,
-    MARGIN_TOP,
-    BOMB_SIZE,
-    BOMB_SIZE);
-
-  const bombsStr = String(bombs).padStart(2, '0');
-
-  drawNumber(
-    ctx,
-    bombsStr,
-    MARGIN_LEFT + (BOMB_SIZE + GAP),
-    1,
-    1,
-    1,
-    '#000'
-  );
-}
-
 function spawnEnemy() {
-  const y = Math.floor(Math.random() * (playArea.height - 7)) + playArea.y;
-  gameObjects.push(new Enemy(playArea.x + playArea.width - 7, y));
+  const y = Math.floor(Math.random() * (PLAY_AREA_HEIGHT - playArea.y)) + playArea.y;
+  const x = playArea.x + playArea.width - 7;
+  gameObjects.push(new Enemy(x, y, loadedImages.enemy));
 }
 
-function drawGUI() {
-  // Draw rectangle under UI (below UI bar)
-  ctx.fillStyle = NOKIA_GREEN; // Slightly lighter green for contrast
-  ctx.fillRect(0, 0, INTERNAL_WIDTH, 7);
-
-  // Draw HP hearts
-  drawPlayerHP(ctx, player.hp);
-
-  // Draw bombs
-  drawPlayerBombs(ctx, player.bombs);
-
-  // Draw score
-  const scoreStr = String(score).padStart(5, '0');
-  drawNumber(
-    ctx,
-    scoreStr,
-    56,
-    1,
-    1,
-    1,
-    '#000'
-  );
+function tintLayer(ctx, color) {
+  ctx.globalCompositeOperation = "source-in";
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.globalCompositeOperation = "source-over";
 }
 
 function updateGameObjects(gameObjects, playArea) {
@@ -164,8 +116,16 @@ function collideGameObjects(gameObjects) {
 
 function cleanupGameObjects(gameObjects, playArea) {
   return gameObjects.filter(obj => {
-    // Remove if explicitly destroyed or out of bounds
-    if (obj.destroyed) return false;
+
+    // On destroy
+    if (obj.destroyed) {
+      if (isEnemy(obj)) {
+        score += obj.scoreValue;
+      }
+      return false
+    }
+
+    // On out of bounds
     if (obj.isOutOfBounds && obj.isOutOfBounds(playArea)) return false;
     return true;
   });
@@ -180,10 +140,11 @@ function drawGameObjects(ctx, gameObjects) {
 }
 
 function drawScene() {
-  ctx.fillStyle = NOKIA_GREEN;
-  ctx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
+  backgroundLayerCanvasCtx.fillStyle = colorPalette.background;
+  backgroundLayerCanvasCtx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
 
-  ctx.imageSmoothingEnabled = false;
+  gameLayerCanvasCtx.clearRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
+  gameLayerCanvasCtx.imageSmoothingEnabled = false;
 
   if (controller && controller.updatePlayerControls) {
     controller.updatePlayerControls(playArea); // <-- Call controls per frame
@@ -201,24 +162,21 @@ function drawScene() {
   gameObjects.push(...cleanedObjects);
 
   // 4. Draw all game objects
-  drawGameObjects(ctx, gameObjects);
+  drawGameObjects(gameLayerCanvasCtx, gameObjects);
 
   // 5. Draw GUI
-  drawGUI();
+  drawHUD(gameLayerCanvasCtx, player, score);
+
+  // 6. Tint layers if needed
+  tintLayer(gameLayerCanvasCtx, colorPalette.foreground);
   if (player.hp <= 0) {
     resetGame();
   }
 }
 
-function getControlsHeight() {
-  const controls = document.getElementById('controls-bottom');
-  return controls ? controls.offsetHeight : 0;
-}
-
 function getMaxScale() {
-  const controlsHeight = getControlsHeight();
   const maxWidth = window.innerWidth * 0.8;
-  const maxHeight = (window.innerHeight - controlsHeight) * 0.8;
+  const maxHeight = window.innerHeight * 0.8;
   const scaleByWidth = Math.floor(maxWidth / INTERNAL_WIDTH);
   const scaleByHeight = Math.floor(maxHeight / INTERNAL_HEIGHT);
   return Math.max(2, Math.min(scaleByWidth, scaleByHeight));
@@ -226,8 +184,8 @@ function getMaxScale() {
 
 function resizeCanvas() {
   const scale = getMaxScale();
-  canvas.style.width = `${INTERNAL_WIDTH * scale}px`;
-  canvas.style.height = `${INTERNAL_HEIGHT * scale}px`;
+  container.style.width = `${INTERNAL_WIDTH * scale}px`;
+  container.style.height = `${INTERNAL_HEIGHT * scale}px`;
 }
 
 function animate() {

@@ -1,4 +1,4 @@
-import {BulletSource, GameObjectType} from "./enum.js";
+import {BulletSource, GameObjectType} from "./const.js";
 
 export function isPlayer(obj) {
   return obj && obj.type === GameObjectType.PLAYER;

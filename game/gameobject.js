@@ -1,12 +1,13 @@
 export class GameObject {
-  constructor(x, y, width, height) {
+  constructor(x, y, sprite) {
     this.x = x;
     this.y = y;
-    this.width = width;
-    this.height = height;
+    this.width = sprite.getWidth();
+    this.height = sprite.getHeight();
     this.damage = 0;
     this.type = 'GENERIC';
     this.destroyed = false;
+    this.sprite = sprite;
   }
 
   getCollisionBox() {
@@ -23,7 +24,12 @@ export class GameObject {
   }
 
   draw(ctx) {
-    // Default: do nothing
+    if (this.sprite && this.sprite.image && this.sprite.image.complete) {
+      this.sprite.draw(ctx, Math.floor(this.x), Math.floor(this.y), 0, this.sprite.scale);
+    } else {
+      ctx.fillStyle = '#ff0000';
+      ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.width, this.height);
+    }
   }
 
   isOutOfBounds(bounds) {
