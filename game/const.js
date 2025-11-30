@@ -16,6 +16,6 @@ export const ColorPalette = Object.freeze({
   LIGHT: {background: SCREEN_LIGHT, foreground: SCREEN_DARK},
   DARK: {background: SCREEN_DARK, foreground: SCREEN_LIGHT}
 });
-export const PATH_ASSETS = 'game/assets/';
+export const PATH_ASSETS = './game/assets/';
 export const INTERNAL_WIDTH = 168;
 export const INTERNAL_HEIGHT = 96;
