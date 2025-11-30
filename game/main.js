@@ -38,7 +38,8 @@ const ASSETS = {
   player: PATH_ASSETS + 'player.png',
   enemy: PATH_ASSETS + 'rocket.png',
   bullet: PATH_ASSETS + 'bullet.png',
-  bomb: PATH_ASSETS + 'bomb.png'
+  bomb: PATH_ASSETS + 'bomb.png',
+  pauseOverlay: PATH_ASSETS + 'pause-overlay.png'
 };
 
 const assetLoader = new AssetLoader(ASSETS);
@@ -46,10 +47,11 @@ export let loadedImages = {};
 
 let player, score, lastEnemySpawnTime, gameObjects, controller;
 let colorPalette = ColorPalette.DARK;
+let paused = true;
 
 function initGame() {
   gameObjects = [];
-  player = new Player(1, 1, loadedImages.player);
+  player = new Player(1, 48, loadedImages.player);
   gameObjects.push(player);
   score = 0;
   lastEnemySpawnTime = performance.now();
@@ -67,6 +69,11 @@ function startGame() {
 
 window.addEventListener('resize', resizeCanvas);
 window.addEventListener('DOMContentLoaded', startGame);
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Escape') {
+    paused = !paused;
+  }
+});
 
 function resetGame() {
   initGame();
@@ -139,6 +146,7 @@ function drawGameObjects(ctx, gameObjects) {
   }
 }
 
+
 function drawScene() {
   backgroundLayerCanvasCtx.fillStyle = colorPalette.background;
   backgroundLayerCanvasCtx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
@@ -188,13 +196,55 @@ function resizeCanvas() {
   container.style.height = `${INTERNAL_HEIGHT * scale}px`;
 }
 
-function animate() {
-  drawScene();
+function drawPausedOverlay(ctx) {
+  ctx.save();
+  // Draw the pause overlay image centered
+  const img = loadedImages.pauseOverlay;
+  if (img && img.complete) {
+    const x = 0;
+    const y = 0;
 
-  const now = performance.now();
-  if (now - lastEnemySpawnTime >= ENEMY_SPAWN_INTERVAL_MS) {
-    spawnEnemy();
-    lastEnemySpawnTime = now;
+    // Fill with tint color
+    ctx.fillStyle = colorPalette.foreground; // Example: impact green
+    ctx.fillRect(x, y, INTERNAL_WIDTH, INTERNAL_WIDTH);
+
+    ctx.globalCompositeOperation = "destination-in";
+    ctx.drawImage(img, x, y, INTERNAL_WIDTH, INTERNAL_HEIGHT);
+
+    // Restore composite operation
+    ctx.globalCompositeOperation = "source-over";
+  }
+  ctx.restore();
+}
+
+function animate() {
+  if (!paused) {
+    drawScene();
+
+    const now = performance.now();
+    if (now - lastEnemySpawnTime >= ENEMY_SPAWN_INTERVAL_MS) {
+      spawnEnemy();
+      lastEnemySpawnTime = now;
+    }
+  } else {
+    // Draw the current game state (objects and HUD) without updating
+    backgroundLayerCanvasCtx.fillStyle = colorPalette.background;
+    backgroundLayerCanvasCtx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
+
+    gameLayerCanvasCtx.clearRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
+    gameLayerCanvasCtx.imageSmoothingEnabled = false;
+
+    // Draw all game objects in their current positions
+    drawGameObjects(gameLayerCanvasCtx, gameObjects);
+
+    // Draw HUD
+    drawHUD(gameLayerCanvasCtx, player, score);
+
+    // Tint layers if needed
+    tintLayer(gameLayerCanvasCtx, colorPalette.foreground);
+
+    // Overlay "Paused"
+    drawPausedOverlay(gameLayerCanvasCtx);
   }
 
   requestAnimationFrame(animate);

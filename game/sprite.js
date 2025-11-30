@@ -9,7 +9,6 @@ export class Sprite {
     this.frameWidth = frameWidth;
     this.frameHeight = image.height;
     this.frameCount = Math.floor(image.width / frameWidth);
-    console.log('frameCount:', this.frameCount);
     this.scale = scale;
   }
 

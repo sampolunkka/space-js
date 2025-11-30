@@ -9,10 +9,10 @@ export class AssetLoader {
     const promises = keys.map(key => {
       return new Promise((resolve, reject) => {
         const img = new window.Image();
-        console.log(`[AssetLoader] Loading asset: ${key} from ${this.assetMap[key]}`);
+        console.debug(`[AssetLoader] Loading asset: ${key} from ${this.assetMap[key]}`);
         img.src = this.assetMap[key];
         img.onload = () => {
-          console.log(`[AssetLoader] Loaded asset: ${key} (${img.width}x${img.height})`);
+          console.debug(`[AssetLoader] Loaded asset: ${key} (${img.width}x${img.height})`);
           this.images[key] = img;
           resolve();
         };
