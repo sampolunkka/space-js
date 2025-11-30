@@ -1,6 +1,6 @@
 import {Player} from './player.js';
 import {Enemy} from './enemy.js';
-import {isColliding} from './utils.js';
+import {isColliding, isEnemy} from './utils.js';
 import {setupPlayerControls} from './controller.js';
 import {drawHUD, HUD_HEIGHT} from "./hud.js";
 import {INTERNAL_WIDTH, INTERNAL_HEIGHT, PATH_ASSETS, SCREEN_DARK, SCREEN_LIGHT, ColorPalette} from "./const.js";
@@ -116,8 +116,16 @@ function collideGameObjects(gameObjects) {
 
 function cleanupGameObjects(gameObjects, playArea) {
   return gameObjects.filter(obj => {
-    // Remove if explicitly destroyed or out of bounds
-    if (obj.destroyed) return false;
+
+    // On destroy
+    if (obj.destroyed) {
+      if (isEnemy(obj)) {
+        score += obj.scoreValue;
+      }
+      return false
+    }
+
+    // On out of bounds
     if (obj.isOutOfBounds && obj.isOutOfBounds(playArea)) return false;
     return true;
   });
