@@ -1,7 +1,7 @@
-import {isEnemy, isEnemyBullet} from "./utils.js";
-import {GameObject} from "./gameobject.js";
-import {GameObjectType} from "./const.js";
-import {Sprite} from './sprite.js';
+import {isEnemy, isEnemyBullet} from "../utils.js";
+import {GameObject} from "../game-object.js";
+import {GameObjectType} from "../const.js";
+import {Sprite} from '../sprite.js';
 
 const PLAYER_SPEED = 1;
 const PLAYER_SPRITE_WIDTH = 10;

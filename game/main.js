@@ -1,12 +1,11 @@
-import {Player} from './player.js';
-import {Enemy} from './enemy.js';
+import {Player} from './player/player.js';
 import {isColliding, isEnemy} from './utils.js';
-import {setupPlayerControls} from './controller.js';
+import {setupPlayerControls} from './player/controller.js';
 import {drawHUD, HUD_HEIGHT} from "./hud.js";
 import {INTERNAL_WIDTH, INTERNAL_HEIGHT, PATH_ASSETS, SCREEN_DARK, SCREEN_LIGHT, ColorPalette} from "./const.js";
-import {AssetLoader} from "./assetloader.js";
-
-const ENEMY_SPAWN_INTERVAL_MS = 2000;
+import {AssetLoader} from "./asset-loader.js";
+import {firstLevel} from './level/levels.js';
+import {createEnemy} from "./enemy/enemy-factory.js";
 
 const PLAY_AREA_X = 0;
 const PLAY_AREA_Y = HUD_HEIGHT;
@@ -39,23 +38,32 @@ const ASSETS = {
   enemy: PATH_ASSETS + 'rocket.png',
   bullet: PATH_ASSETS + 'bullet.png',
   bomb: PATH_ASSETS + 'bomb.png',
-  pauseOverlay: PATH_ASSETS + 'pause-overlay.png'
+  pauseOverlay: PATH_ASSETS + 'pause-overlay.png',
+  rocket: PATH_ASSETS + 'rocket.png'
 };
 
 const assetLoader = new AssetLoader(ASSETS);
 export let loadedImages = {};
 
-let player, score, lastEnemySpawnTime, gameObjects, controller;
+let player, score, gameObjects, controller;
 let colorPalette = ColorPalette.DARK;
 let paused = true;
+let currentLevel = null;
+let levelStartTime = 0;
+let gameStarted = false;
 
 function initGame() {
   gameObjects = [];
   player = new Player(1, 48, loadedImages.player);
   gameObjects.push(player);
   score = 0;
-  lastEnemySpawnTime = performance.now();
   controller = setupPlayerControls(player, gameObjects);
+}
+
+function startLevel() {
+  currentLevel = firstLevel;
+  levelStartTime = performance.now();
+  colorPalette = currentLevel.colorPalette;
 }
 
 function startGame() {
@@ -72,6 +80,11 @@ window.addEventListener('DOMContentLoaded', startGame);
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Escape') {
     paused = !paused;
+    if (!gameStarted) {
+      gameStarted = true;
+      paused = false;
+      startLevel();
+    }
   }
 });
 
@@ -79,10 +92,14 @@ function resetGame() {
   initGame();
 }
 
-function spawnEnemy() {
-  const y = Math.floor(Math.random() * (PLAY_AREA_HEIGHT - playArea.y)) + playArea.y;
-  const x = playArea.x + playArea.width - 7;
-  gameObjects.push(new Enemy(x, y, loadedImages.enemy));
+function spawnGameObject() {
+  const currentTime = performance.now() - levelStartTime;
+  const spawnConfig = currentLevel.getSpawn(currentTime);
+  if (spawnConfig) {
+    console.log('Spawning:', spawnConfig);
+    let enemy = createEnemy(spawnConfig.type, spawnConfig.x, spawnConfig.y);
+    gameObjects.push(enemy);
+  }
 }
 
 function tintLayer(ctx, color) {
@@ -222,10 +239,7 @@ function animate() {
     drawScene();
 
     const now = performance.now();
-    if (now - lastEnemySpawnTime >= ENEMY_SPAWN_INTERVAL_MS) {
-      spawnEnemy();
-      lastEnemySpawnTime = now;
-    }
+    spawnGameObject();
   } else {
     // Draw the current game state (objects and HUD) without updating
     backgroundLayerCanvasCtx.fillStyle = colorPalette.background;

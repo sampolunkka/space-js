@@ -1,21 +1,26 @@
-import {GameObject} from './gameobject.js';
-import {Bullet} from './projectiles/bullet.js';
-import {isPlayer, isPlayerBullet} from "./utils.js";
-import {BulletSource, GameObjectType} from "./const.js";
-import {Sprite} from "./sprite.js";
-import {loadedImages} from "./main.js";
-
-const SPRITE_WIDTH = 9;
+import {GameObject} from '../game-object.js';
+import {Bullet} from '../projectile/projectiles/bullet.js';
+import {isPlayer, isPlayerBullet} from "../utils.js";
+import {BulletSource, GameObjectType} from "../const.js";
+import {loadedImages} from "../main.js";
+import {EnemyType} from "./enemy-type.js";
 
 export class Enemy extends GameObject {
-  constructor(x, y, enemyImg) {
-    super(x, y, new Sprite(enemyImg, SPRITE_WIDTH));
+  /**
+   *
+   * @param {number} x - X coordinate of the enemy
+   * @param {number} y - Y coordinate of the enemy
+   * @param {object} sprite - Sprite of the enemy
+   */
+  constructor(x, y, sprite) {
+    super(x, y, sprite);
     this.speed = 0.2;
     this.health = 1;
     this.scoreValue = 100;
     this.lastShotTime = performance.now();
     this.nextShotInterval = Math.random() * (3000 - 2000) + 2000 - 1500;
     this.type = GameObjectType.ENEMY;
+    this.enemyType = EnemyType.GENERIC;
   }
 
   update(playArea, gameObjects) {
@@ -32,6 +37,11 @@ export class Enemy extends GameObject {
       this.lastShotTime = now;
       this.nextShotInterval = Math.random() * (3000 - 2000) + 2000;
     }
+  }
+
+  isOutOfBounds(bounds) {
+    // Enemies go out of bounds on the left side only
+    return this.x + this.width < bounds.x;
   }
 
   collideWith(other) {

@@ -1,7 +1,7 @@
-import {isEnemy} from "../utils.js";
-import {BulletSource, GameObjectType} from "../const.js";
+import {isEnemy} from "../../utils.js";
+import {BulletSource, GameObjectType} from "../../const.js";
 import {Projectile} from "../projectile.js";
-import {Sprite} from "../sprite.js";
+import {Sprite} from "../../sprite.js";
 
 export class Bomb extends Projectile {
   static DEFAULT_AMPLITUDE = 12;

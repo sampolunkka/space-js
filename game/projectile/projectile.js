@@ -1,5 +1,5 @@
-import {GameObject} from "./gameobject.js";
-import {BulletSource, GameObjectType} from "./const.js";
+import {GameObject} from "../game-object.js";
+import {BulletSource, GameObjectType} from "../const.js";
 
 export class Projectile extends GameObject {
   constructor(x, y, sprite, damage = 1, source = BulletSource.PLAYER, speed = 0.33) {

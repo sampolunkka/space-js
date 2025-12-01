@@ -1,4 +1,4 @@
-import {drawNumber} from './scorefont.js';
+import {drawNumber} from './score-font.js';
 import {PATH_ASSETS} from './const.js';
 export const HUD_HEIGHT = 14;
 

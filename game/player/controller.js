@@ -1,7 +1,8 @@
-import {Bullet} from './projectiles/bullet.js';
-import {Bomb} from './projectiles/bomb.js';
-import {BulletSource} from './const.js';
-import {loadedImages} from "./main.js";
+// JavaScript
+import {Bullet} from '../projectile/projectiles/bullet.js';
+import {Bomb} from '../projectile/projectiles/bomb.js';
+import {BulletSource} from '../const.js';
+import {loadedImages} from "../main.js";
 
 export function setupPlayerControls(player, gameObjects) {
   const movement = { up: false, down: false };
@@ -29,6 +30,15 @@ export function setupPlayerControls(player, gameObjects) {
         movement.down = true;
         break;
       case ' ':
+        if (!shootPressed) {
+          const now = performance.now();
+          if (now - lastBulletTime >= BULLET_COOLDOWN_MS) {
+            lastBulletTime = now;
+            const bulletImg = loadedImages.bullet;
+            const bullet = new Bullet(player.x + 22, player.y + 7, bulletImg, player.bulletDamage, BulletSource.PLAYER);
+            gameObjects.push(bullet);
+          }
+        }
         shootPressed = true;
         break;
       case 'Enter':
@@ -58,7 +68,6 @@ export function setupPlayerControls(player, gameObjects) {
 
   function updatePlayerControls(playArea) {
     const now = performance.now();
-    const bulletImg = loadedImages.bullet;
 
     // Movement with delay
     if (movement.up && now - lastMove.up >= MOVE_DELAY_MS) {
@@ -72,13 +81,6 @@ export function setupPlayerControls(player, gameObjects) {
 
     // Clamp position
     player.y = Math.max(playArea.y, Math.min(player.y, playArea.y + playArea.height - player.height));
-
-    // Shooting
-    if (shootPressed && now - lastBulletTime >= BULLET_COOLDOWN_MS) {
-      lastBulletTime = now;
-      const bullet = new Bullet(player.x + 22, player.y + 7, bulletImg, player.bulletDamage, BulletSource.PLAYER);
-      gameObjects.push(bullet);
-    }
 
     // Bomb
     if (bombPressed && player.bombs > 0 && now - lastBombTime >= BOMB_COOLDOWN_MS) {

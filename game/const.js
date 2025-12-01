@@ -10,6 +10,7 @@ export const GameObjectType = Object.freeze({
   BULLET: 'bullet',
   BOMB: 'bomb'
 });
+
 export const SCREEN_LIGHT = '#c4eeb2';
 export const SCREEN_DARK = '#43523d';
 export const ColorPalette = Object.freeze({
