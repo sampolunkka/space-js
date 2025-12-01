@@ -25,7 +25,7 @@ export class GameObject {
 
   draw(ctx) {
     if (this.sprite && this.sprite.image && this.sprite.image.complete) {
-      this.sprite.draw(ctx, Math.floor(this.x), Math.floor(this.y), 0, this.sprite.scale);
+      this.sprite.draw(ctx, Math.floor(this.x), Math.floor(this.y));
     } else {
       ctx.fillStyle = '#ff0000';
       ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.width, this.height);
