@@ -13,32 +13,23 @@ export class Sprite {
     this.scale = scale;
 
     // Animation state
-    this.frameIndex = 0;
     this.fps = fps;
-    this.frameDuration = 1000 / this.fps;
-    this.lastFrameTime = performance.now();
+  }
+
+  getFrameIndex() {
+    const t = performance.now() * 0.001;
+    const fps = this.fps ?? 12;
+    return Math.floor(t * fps) % this.frameCount;
   }
 
   draw(ctx, x, y) {
     if (!this.image.complete) return;
-
-    // Update animation frame
-    this.update();
-
-    const sx = this.frameIndex * this.frameWidth;
+    const sx = this.getFrameIndex() * this.frameWidth;
     ctx.drawImage(
       this.image,
       sx, 0, this.frameWidth, this.frameHeight,
       x, y, this.frameWidth * this.scale, this.frameHeight * this.scale
     );
-  }
-
-  update() {
-    const now = performance.now();
-    if (now - this.lastFrameTime >= this.frameDuration) {
-      this.lastFrameTime = now;
-      this.frameIndex = (this.frameIndex + 1) % this.frameCount;
-    }
   }
 
   getWidth() {
