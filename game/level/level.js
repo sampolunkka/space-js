@@ -1,6 +1,6 @@
 export class Level {
   /**
-   * @param {Object[]} spawnStack - Array of object spawn configs: {type, x, y, time}
+   * @param {Object[]} spawnStack - Array of object spawn configs: {enemyType, x, y, time}
    * @param {Object} colorPalette - Level color palette
    * @param {HTMLImageElement} [backgroundSprite] - (Optional) Background image
    */

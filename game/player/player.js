@@ -12,7 +12,7 @@ export class Player extends GameObject {
     this.speed = PLAYER_SPEED;
     this.bulletDamage = 1;
     this.hp = 3;
-    this.bombs = 99;
+    this.bombs = 2;
     this.type = GameObjectType.PLAYER;
   }
 

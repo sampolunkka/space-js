@@ -39,7 +39,9 @@ const ASSETS = {
   bullet: PATH_ASSETS + 'bullet.png',
   bomb: PATH_ASSETS + 'bomb.png',
   pauseOverlay: PATH_ASSETS + 'pause-overlay.png',
-  rocket: PATH_ASSETS + 'rocket.png'
+  rocket: PATH_ASSETS + 'rocket.png',
+  jelly: PATH_ASSETS + 'jelly.png',
+  lander: PATH_ASSETS + 'lander.png',
 };
 
 const assetLoader = new AssetLoader(ASSETS);
@@ -97,7 +99,7 @@ function spawnGameObject() {
   const spawnConfig = currentLevel.getSpawn(currentTime);
   if (spawnConfig) {
     console.log('Spawning:', spawnConfig);
-    let enemy = createEnemy(spawnConfig.type, spawnConfig.x, spawnConfig.y);
+    let enemy = createEnemy(spawnConfig.enemyType, spawnConfig.x, spawnConfig.y);
     gameObjects.push(enemy);
   }
 }

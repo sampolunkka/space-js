@@ -3,7 +3,6 @@ import {Bullet} from '../projectile/projectiles/bullet.js';
 import {isPlayer, isPlayerBullet} from "../utils.js";
 import {BulletSource, GameObjectType} from "../const.js";
 import {loadedImages} from "../main.js";
-import {EnemyType} from "./enemy-type.js";
 
 export class Enemy extends GameObject {
   /**
@@ -20,23 +19,27 @@ export class Enemy extends GameObject {
     this.lastShotTime = performance.now();
     this.nextShotInterval = Math.random() * (3000 - 2000) + 2000 - 1500;
     this.type = GameObjectType.ENEMY;
-    this.enemyType = EnemyType.GENERIC;
   }
 
-  update(playArea, gameObjects) {
-    const bulletImg = loadedImages.bullet;
+  move(playArea) {
     this.x -= this.speed;
     this.y = Math.max(playArea.y, Math.min(this.y, playArea.y + playArea.height - this.height));
-
+  }
+  shoot(gameObjects) {
     // Fire bullet
     const now = performance.now();
     if (now - this.lastShotTime >= this.nextShotInterval) {
       gameObjects.push(
-        new Bullet(this.x - 2, this.y + this.height / 2, bulletImg, 1, BulletSource.ENEMY, 0.5)
+        new Bullet(this.x - 2, this.y + this.height / 2, loadedImages.bullet, 1, BulletSource.ENEMY, 0.5)
       );
       this.lastShotTime = now;
       this.nextShotInterval = Math.random() * (3000 - 2000) + 2000;
     }
+  }
+
+  update(playArea, gameObjects) {
+    this.move(playArea);
+    this.shoot(gameObjects);
   }
 
   isOutOfBounds(bounds) {
