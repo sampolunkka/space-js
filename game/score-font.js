@@ -1,7 +1,7 @@
 import {PATH_ASSETS} from "./const.js";
 
-const DIGIT_WIDTH = 6;
-const DIGIT_HEIGHT = 10;
+const DIGIT_WIDTH = 3;
+const DIGIT_HEIGHT = 5;
 const DIGIT_COUNT = 10;
 
 export const scoreFontImage = new window.Image();

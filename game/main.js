@@ -2,10 +2,13 @@ import {Player} from './player/player.js';
 import {isColliding, isEnemy} from './utils.js';
 import {setupPlayerControls} from './player/controller.js';
 import {drawHUD, HUD_HEIGHT} from "./hud.js";
-import {INTERNAL_WIDTH, INTERNAL_HEIGHT, PATH_ASSETS, SCREEN_DARK, SCREEN_LIGHT, ColorPalette} from "./const.js";
+import {INTERNAL_WIDTH, INTERNAL_HEIGHT, PATH_ASSETS, SCREEN_DARK, SCREEN_LIGHT, TICK_RATE, TICK_STEP, ColorPalette} from "./const.js";
 import {AssetLoader} from "./asset-loader.js";
 import {firstLevel} from './level/levels.js';
 import {createEnemy} from "./enemy/enemy-factory.js";
+let last = performance.now();
+let accumulator = 0;
+let tick = 0;
 
 const PLAY_AREA_X = 0;
 const PLAY_AREA_Y = HUD_HEIGHT;
@@ -73,7 +76,7 @@ function startGame() {
   assetLoader.loadAll().then(images => {
     loadedImages = images;
     initGame();
-    animate();
+    requestAnimationFrame(gameLoop);
   });
 }
 
@@ -94,11 +97,9 @@ function resetGame() {
   initGame();
 }
 
-function spawnGameObject() {
-  const currentTime = performance.now() - levelStartTime;
-  const spawnConfig = currentLevel.getSpawn(currentTime);
+function spawnGameObject(currentTick) {
+  const spawnConfig = currentLevel.getSpawn(currentTick);
   if (spawnConfig) {
-    console.log('Spawning:', spawnConfig);
     let enemy = createEnemy(spawnConfig.enemyType, spawnConfig.x, spawnConfig.y);
     gameObjects.push(enemy);
   }
@@ -120,14 +121,15 @@ function updateGameObjects(gameObjects, playArea) {
 }
 
 function collideGameObjects(gameObjects) {
-  const len = gameObjects.length;
 
+  //TODO: When game objects collide, no bullet damage is transferred to enemy. This is likely due to changing
+  //constructors of game objects, bullets, enemies, etc. Need to investigate and fix.
+
+  const len = gameObjects.length;
   for (let i = 0; i < len; i++) {
     const objA = gameObjects[i];
-
     for (let j = i + 1; j < len; j++) {
       const objB = gameObjects[j];
-
       if (
         objA.getCollisionBox &&
         objB.getCollisionBox &&
@@ -142,59 +144,32 @@ function collideGameObjects(gameObjects) {
 
 function cleanupGameObjects(gameObjects, playArea) {
   return gameObjects.filter(obj => {
-
-    // On destroy
     if (obj.destroyed) {
       if (isEnemy(obj)) {
         score += obj.scoreValue;
       }
       return false
     }
-
-    // On out of bounds
     if (obj.isOutOfBounds && obj.isOutOfBounds(playArea)) return false;
     return true;
   });
 }
 
-function drawGameObjects(ctx, gameObjects) {
+function drawGameObjects(ctx, gameObjects, tick, alpha) {
   for (const obj of gameObjects) {
-    if (obj.draw) {
-      obj.draw(ctx);
-    }
+    if (obj.draw) obj.draw(ctx, tick, alpha);
   }
 }
 
-
-function drawScene() {
+function drawScene(alpha) {
   backgroundLayerCanvasCtx.fillStyle = colorPalette.background;
   backgroundLayerCanvasCtx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
 
   gameLayerCanvasCtx.clearRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
   gameLayerCanvasCtx.imageSmoothingEnabled = false;
 
-  if (controller && controller.updatePlayerControls) {
-    controller.updatePlayerControls(playArea); // <-- Call controls per frame
-  }
-
-  // 1. Update all game objects
-  updateGameObjects(gameObjects, playArea);
-
-  // 2. Handle collisions
-  collideGameObjects(gameObjects);
-
-  // 3. Cleanup destroyed or out-of-bounds objects
-  const cleanedObjects = cleanupGameObjects(gameObjects, playArea);
-  gameObjects.length = 0;
-  gameObjects.push(...cleanedObjects);
-
-  // 4. Draw all game objects
-  drawGameObjects(gameLayerCanvasCtx, gameObjects);
-
-  // 5. Draw GUI
+  drawGameObjects(gameLayerCanvasCtx, gameObjects, tick, alpha);
   drawHUD(gameLayerCanvasCtx, player, score);
-
-  // 6. Tint layers if needed
   tintLayer(gameLayerCanvasCtx, colorPalette.foreground);
   if (player.hp <= 0) {
     resetGame();
@@ -216,52 +191,53 @@ function resizeCanvas() {
 }
 
 function drawPausedOverlay(ctx) {
+  backgroundLayerCanvasCtx.fillStyle = colorPalette.background;
+  backgroundLayerCanvasCtx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
+  ctx.imageSmoothingEnabled = false;
   ctx.save();
-  // Draw the pause overlay image centered
   const img = loadedImages.pauseOverlay;
   if (img && img.complete) {
     const x = 0;
     const y = 0;
-
-    // Fill with tint color
-    ctx.fillStyle = colorPalette.foreground; // Example: impact green
+    ctx.fillStyle = colorPalette.foreground;
     ctx.fillRect(x, y, INTERNAL_WIDTH, INTERNAL_WIDTH);
-
     ctx.globalCompositeOperation = "destination-in";
     ctx.drawImage(img, x, y, INTERNAL_WIDTH, INTERNAL_HEIGHT);
-
-    // Restore composite operation
     ctx.globalCompositeOperation = "source-over";
   }
   ctx.restore();
 }
 
-function animate() {
-  if (!paused) {
-    drawScene();
-
-    const now = performance.now();
-    spawnGameObject();
-  } else {
-    // Draw the current game state (objects and HUD) without updating
-    backgroundLayerCanvasCtx.fillStyle = colorPalette.background;
-    backgroundLayerCanvasCtx.fillRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
-
-    gameLayerCanvasCtx.clearRect(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT);
-    gameLayerCanvasCtx.imageSmoothingEnabled = false;
-
-    // Draw all game objects in their current positions
-    drawGameObjects(gameLayerCanvasCtx, gameObjects);
-
-    // Draw HUD
-    drawHUD(gameLayerCanvasCtx, player, score);
-
-    // Tint layers if needed
-    tintLayer(gameLayerCanvasCtx, colorPalette.foreground);
-
-    // Overlay "Paused"
+// Main game loop with fixed tickrate
+function gameLoop(now) {
+  if (paused) {
     drawPausedOverlay(gameLayerCanvasCtx);
+    requestAnimationFrame(gameLoop);
+    return;
   }
 
-  requestAnimationFrame(animate);
+  let delta = now - last;
+  last = now;
+  accumulator += delta;
+
+  while (accumulator >= TICK_STEP) {
+    if (controller && controller.updatePlayerControls) {
+      controller.updatePlayerControls(playArea, tick);
+    }
+    updateGameObjects(gameObjects, playArea);
+    collideGameObjects(gameObjects);
+    const cleanedObjects = cleanupGameObjects(gameObjects, playArea);
+    gameObjects.length = 0;
+    gameObjects.push(...cleanedObjects);
+
+    spawnGameObject(tick);
+
+    tick++;
+    accumulator -= TICK_STEP;
+  }
+
+  const alpha = accumulator / TICK_STEP;
+
+  drawScene(alpha);
+  requestAnimationFrame(gameLoop);
 }

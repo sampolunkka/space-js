@@ -1,6 +1,6 @@
 import {drawNumber} from './score-font.js';
-import {PATH_ASSETS} from './const.js';
-export const HUD_HEIGHT = 14;
+import {PATH_ASSETS, SCALE_DEFAULT} from './const.js';
+export const HUD_HEIGHT = 7 * SCALE_DEFAULT;
 
 const MARGIN_TOP = 1;
 
@@ -11,48 +11,50 @@ const bombImg = new window.Image();
 bombImg.src =  PATH_ASSETS + 'bomb.png';
 
 export function drawPlayerHP(ctx, hp, heartImg) {
-  const HEART_SIZE = 10;
   const MARGIN_LEFT = 1;
   const GAP = 1;
   for (let i = 0; i < hp; i++) {
     ctx.drawImage(
       heartImg,
-      MARGIN_LEFT + i * (HEART_SIZE + GAP),
+      MARGIN_LEFT + i * (heartImg.width + GAP) * SCALE_DEFAULT,
       MARGIN_TOP,
+      heartImg.width * SCALE_DEFAULT,
+      heartImg.height * SCALE_DEFAULT
     );
   }
 }
 
 export function drawPlayerBombs(ctx, bombs, bombImg) {
-  const BOMB_SIZE = 10;
-  const BOMBS_X = 72;
+  const BOMBS_X = 36 * SCALE_DEFAULT;
 
-  const GAP = 4;
+  const GAP = 2;
   ctx.drawImage(
     bombImg,
     BOMBS_X,
     MARGIN_TOP,
-    BOMB_SIZE,
-    BOMB_SIZE
+    bombImg.width * SCALE_DEFAULT,
+    bombImg.height * SCALE_DEFAULT
   );
 
   const bombsStr = String(bombs).padStart(2, '0');
   drawNumber(
     ctx,
     bombsStr,
-    BOMBS_X + (BOMB_SIZE + GAP),
-    MARGIN_TOP
+    BOMBS_X + (bombImg.width + GAP) * SCALE_DEFAULT,
+    MARGIN_TOP,
+    SCALE_DEFAULT
   );
 }
 
 function drawScore(ctx, score) {
-  const SCORE_X = 114;
+  const SCORE_X = 57 * SCALE_DEFAULT
   const scoreStr = String(score).padStart(5, '0');
   drawNumber(
     ctx,
     scoreStr,
     SCORE_X,
-    MARGIN_TOP
+    MARGIN_TOP,
+    SCALE_DEFAULT
   );
 }
 

@@ -1,13 +1,26 @@
+import {USE_INTERPOLATION} from "./const.js";
+import {speedUnitsToPixelsPerTick} from "./utils.js";
+
 export class GameObject {
-  constructor(x, y, sprite) {
+
+
+  constructor(x, y, sprite, speed, type) {
     this.x = x;
     this.y = y;
+    this.prevX = x;
+    this.prevY = y;
     this.width = sprite.getWidth();
     this.height = sprite.getHeight();
     this.damage = 0;
-    this.type = 'GENERIC';
+    this.type = type;
     this.destroyed = false;
     this.sprite = sprite;
+    this.speed = speedUnitsToPixelsPerTick(speed);
+  }
+
+  savePreviousState() {
+    this.prevX = this.x;
+    this.prevY = this.y;
   }
 
   getCollisionBox() {
@@ -20,15 +33,28 @@ export class GameObject {
   }
 
   update(playArea, gameObjects) {
+    this.savePreviousState();
+    this.onUpdate(playArea, gameObjects);
+  }
+
+  onUpdate(playArea, gameObjects) {
     // Default: do nothing
   }
 
-  draw(ctx) {
+  draw(ctx, tick, alpha = 1) {
+    let drawX, drawY;
+    if (USE_INTERPOLATION) {
+      drawX = this.prevX + (this.x - this.prevX) * alpha;
+      drawY = this.prevY + (this.y - this.prevY) * alpha;
+    } else {
+      drawX = this.x;
+      drawY = this.y;
+    }
     if (this.sprite && this.sprite.image && this.sprite.image.complete) {
-      this.sprite.draw(ctx, Math.floor(this.x), Math.floor(this.y));
+      this.sprite.draw(ctx, tick, Math.floor(drawX), Math.floor(drawY));
     } else {
       ctx.fillStyle = '#ff0000';
-      ctx.fillRect(Math.floor(this.x), Math.floor(this.y), this.width, this.height);
+      ctx.fillRect(Math.floor(drawX), Math.floor(drawY), this.width, this.height);
     }
   }
 

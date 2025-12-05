@@ -1,13 +1,13 @@
 import {GameObject} from "../game-object.js";
-import {BulletSource, GameObjectType} from "../const.js";
+import {ProjectileSource, GameObjectType} from "../const.js";
+
+const PROJECTILE_TYPE = GameObjectType.PROJECTILE;
 
 export class Projectile extends GameObject {
-  constructor(x, y, sprite, damage = 1, source = BulletSource.PLAYER, speed = 0.33) {
-    super(x, y, sprite);
+  constructor(x, y, sprite, damage, source, speed, type = PROJECTILE_TYPE) {
+    super(x, y, sprite, speed, type);
     this.damage = damage;
     this.source = source;
-    this.speed = source === BulletSource.PLAYER ? speed : -speed;
-    this.type = GameObjectType.BULLET;
   }
 
   isOutOfBounds(bounds) {
